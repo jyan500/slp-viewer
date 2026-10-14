@@ -1,0 +1,40 @@
+{
+    "name": "slp-viewer",
+    "version": "0.1.0",
+    "description": "Local frame-by-frame Slippi replay viewer",
+    "main": "./out/main/index.js",
+    "author": "jyan500",
+    "private": true,
+    "scripts": {
+        "dev": "electron-vite dev",
+        "build": "npm run typecheck && electron-vite build",
+        "preview": "electron-vite preview",
+        "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+        "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+        "typecheck": "npm run typecheck:node && npm run typecheck:web",
+        "fetch-animations": "node scripts/fetch-animations.mjs",
+        "import-improover": "node scripts/import-improover.mjs"
+    },
+    "dependencies": {
+        "@electron-toolkit/preload": "^3.0.2",
+        "@electron-toolkit/utils": "^3.0.0",
+        "@slippi/slippi-js": "^9.1.3",
+        "fflate": "^0.8.3",
+        "koffi": "^3.3.3"
+    },
+    "devDependencies": {
+        "@electron-toolkit/tsconfig": "^1.0.1",
+        "@types/node": "^22.20.5",
+        "@types/react": "^18.3.31",
+        "@types/react-dom": "^18.3.7",
+        "@vitejs/plugin-react": "^4.7.0",
+        "electron": "^33.4.11",
+        "electron-vite": "^2.3.0",
+        "lucide-react": "^1.56.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "sonner": "^1.7.4",
+        "typescript": "~5.6",
+        "vite": "^5.4.21"
+    }
+}
