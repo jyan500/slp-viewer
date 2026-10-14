@@ -2,6 +2,13 @@ import { copyFileSync, existsSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { app } from "electron";
 
+const DEFAULT_REPLAY_DIR = "D:\\All Slippi Replays";
+
+// Where file/folder pickers start when nothing more specific is known.
+export function getDefaultReplayDirectory(): string {
+    return existsSync(DEFAULT_REPLAY_DIR) ? DEFAULT_REPLAY_DIR : app.getPath("documents");
+}
+
 // Read-only files that ship with the app. In development they live in the project
 // folder; a packaged build copies them next to app.asar via electron-builder's
 // extraResources (see electron-builder.yml), since the archive can't hold files that

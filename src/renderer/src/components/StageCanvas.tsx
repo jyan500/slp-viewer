@@ -8,9 +8,19 @@ import { boundsToView, computeCameraTrack, type CameraMode, type CameraView } fr
 import { drawCharacter, drawLabels, type CharacterLabel } from "../lib/drawCharacter";
 import { drawItems } from "../lib/drawItems";
 
-const STAGE_DEPTH = 30;
+const STAGE_FILL = "#262b36";
+const STAGE_STROKE = "#9aa3b5";
+// Randall is lighter so it reads as separate from the stage.
+const CLOUD_STROKE = "#d6dbe6";
 
-function drawStage(context: CanvasRenderingContext2D, viewport: Viewport, geometry: StageGeometry, bounds: Bounds) {
+function drawStage(
+    context: CanvasRenderingContext2D,
+    viewport: Viewport,
+    geometry: StageGeometry,
+    bounds: Bounds,
+    replay: ReplayData,
+    frame: number,
+) {
     const { toScreenX, toScreenY } = viewport;
 
     context.save();
@@ -25,26 +35,42 @@ function drawStage(context: CanvasRenderingContext2D, viewport: Viewport, geomet
     );
     context.restore();
 
-    const inset = geometry.edge * 0.2;
+    const drawLine = (left: number, right: number, y: number) => {
+        context.beginPath();
+        context.moveTo(toScreenX(left), toScreenY(y));
+        context.lineTo(toScreenX(right), toScreenY(y));
+        context.stroke();
+    };
+
+    // Moving platforms go first so the stage covers them when they pass behind or sink
+    // into it (Randall's top run, Fountain of Dreams' lowered platforms), as in the game.
+    context.lineWidth = 3;
+    context.lineCap = "round";
+    for (const platform of geometry.getMovingPlatforms?.(frame, replay) ?? []) {
+        context.strokeStyle = platform.style === "cloud" ? CLOUD_STROKE : STAGE_STROKE;
+        context.setLineDash(platform.isEstimated ? [4, 6] : []);
+        drawLine(platform.left, platform.right, platform.y);
+    }
+    context.setLineDash([]);
+
     context.beginPath();
-    context.moveTo(toScreenX(-geometry.edge), toScreenY(0));
-    context.lineTo(toScreenX(geometry.edge), toScreenY(0));
-    context.lineTo(toScreenX(geometry.edge - inset), toScreenY(-STAGE_DEPTH));
-    context.lineTo(toScreenX(-geometry.edge + inset), toScreenY(-STAGE_DEPTH));
+    geometry.outline.forEach(([x, y], index) => {
+        if (index === 0) {
+            context.moveTo(toScreenX(x), toScreenY(y));
+        } else {
+            context.lineTo(toScreenX(x), toScreenY(y));
+        }
+    });
     context.closePath();
-    context.fillStyle = "#262b36";
+    context.fillStyle = STAGE_FILL;
     context.fill();
-    context.strokeStyle = "#9aa3b5";
+    context.strokeStyle = STAGE_STROKE;
     context.lineWidth = 2;
     context.stroke();
 
     context.lineWidth = 3;
-    context.lineCap = "round";
     for (const platform of geometry.platforms) {
-        context.beginPath();
-        context.moveTo(toScreenX(platform.left), toScreenY(platform.height));
-        context.lineTo(toScreenX(platform.right), toScreenY(platform.height));
-        context.stroke();
+        drawLine(platform.left, platform.right, platform.height);
     }
 }
 
@@ -62,7 +88,7 @@ function drawFrame(
     const viewport = createViewport(view, width, height);
     const geometry = getStageGeometry(replay.stageId);
     if (geometry) {
-        drawStage(context, viewport, geometry, bounds);
+        drawStage(context, viewport, geometry, bounds, replay, replay.firstFrame + frameIndex);
     }
     const snapshot = replay.frames[frameIndex];
     if (!snapshot) {

@@ -13,6 +13,10 @@ Character animation data and rendering logic are adapted from Slippi Lab
   easing constants).
 - `src/renderer/src/lib/itemNames.ts` is vendored from that commit, and
   `src/renderer/src/lib/drawItems.ts` ports its projectile shapes and hitbox sizes.
+- `src/renderer/src/lib/randall.ts` ports its Randall (Yoshi's Story cloud) motion, and
+  the stage outlines, platforms and Fountain of Dreams platform-height scaling in
+  `src/renderer/src/lib/stages.ts` (plus the initial heights in `src/shared/stages.ts`)
+  come from its stage data.
 - `scripts/fetch-animations.mjs` downloads its pre-extracted animation zips into
   `resources/animations/`, which is not committed to this repository. The animation data
   in those zips is derived from Super Smash Bros. Melee.

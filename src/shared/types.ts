@@ -74,6 +74,10 @@ export interface ReplayData {
     players: PlayerInfo[];
     // Every internal character ID that appears, so animations can be preloaded.
     internalCharacterIds: number[];
+    // Fountain of Dreams side-platform heights per frame (same indexing as `frames`), in
+    // the game's raw units. Null for other stages, or replays older than 3.18 that don't
+    // record platform movement.
+    fodPlatformHeights: { left: number[]; right: number[] } | null;
     frames: FrameSnapshot[];
 }
 
@@ -111,6 +115,31 @@ export interface SavestateExportRequest {
 export type SavestateExportResult =
     | { ok: true; outputPath: string | null; exportFolder: string }
     | { ok: false; error: string; detail?: string };
+
+// Replay browser (side panel) entries.
+export interface LibraryEntry {
+    name: string;
+    path: string;
+}
+
+export interface DirectoryListing {
+    folders: LibraryEntry[];
+    // Only .slp files.
+    files: LibraryEntry[];
+    error?: string;
+}
+
+export interface LibrarySearchResult extends LibraryEntry {
+    kind: "folder" | "file";
+    // Parent folder relative to the search root, for display ("" = the root itself).
+    parentPath: string;
+}
+
+export interface LibrarySearchResponse {
+    results: LibrarySearchResult[];
+    // True when the result limit was hit and the search stopped early.
+    isTruncated: boolean;
+}
 
 export type LoadReplayResult =
     | { ok: true; replay: ReplayData }

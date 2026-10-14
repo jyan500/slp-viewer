@@ -1,4 +1,6 @@
 import type {
+    DirectoryListing,
+    LibrarySearchResponse,
     LoadReplayResult,
     SavestateEnvironment,
     SavestateExportRequest,
@@ -18,6 +20,10 @@ declare global {
             saveSavestateSettings: (settings: SavestateSettings) => Promise<void>;
             chooseExportFolder: (currentFolder: string | null) => Promise<string | null>;
             exportSavestate: (request: SavestateExportRequest) => Promise<SavestateExportResult>;
+            getDefaultLibraryFolder: () => Promise<string>;
+            listDirectory: (directoryPath: string) => Promise<DirectoryListing>;
+            searchLibrary: (rootPath: string, query: string) => Promise<LibrarySearchResponse>;
+            chooseLibraryFolder: (currentFolder: string | null) => Promise<string | null>;
         };
     }
 }

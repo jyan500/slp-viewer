@@ -1,7 +1,12 @@
 import { basename } from "path";
-import { Frames, SlippiGame, characters, stages } from "@slippi/slippi-js/node";
+import { FodPlatformSide, Frames, SlippiGame, characters, stages } from "@slippi/slippi-js/node";
 import type { ItemUpdateType, PostFrameUpdateType, PreFrameUpdateType } from "@slippi/slippi-js/node";
 import type { CharacterState, FrameSnapshot, ItemState, PlayerInfo, ReplayData } from "../shared/types";
+import {
+    FOD_INITIAL_LEFT_PLATFORM_HEIGHT,
+    FOD_INITIAL_RIGHT_PLATFORM_HEIGHT,
+    FOUNTAIN_OF_DREAMS_STAGE_ID,
+} from "../shared/stages";
 
 const MAX_PLAYERS = 4;
 
@@ -116,11 +121,35 @@ export function parseReplay(filePath: string): ReplayData {
         };
     });
 
+    const stageId = settings.stageId ?? 0;
+    const isFountainOfDreams = stageId === FOUNTAIN_OF_DREAMS_STAGE_ID;
+    // FoD platform heights only change via stage events (replays 3.18+); carry the last
+    // known value forward so every frame has one.
+    const fodPlatformHeights = { left: [] as number[], right: [] as number[] };
+    let fodLeftHeight = FOD_INITIAL_LEFT_PLATFORM_HEIGHT;
+    let fodRightHeight = FOD_INITIAL_RIGHT_PLATFORM_HEIGHT;
+    let hasFodEvents = false;
+
     const snapshots: FrameSnapshot[] = [];
     const internalCharacterIds = new Set<number>();
     let previous: FrameSnapshot = { players: [], followers: [], items: [] };
     for (let frameNumber = firstFrame; frameNumber <= lastFrame; frameNumber++) {
         const entry = frames[frameNumber];
+        if (isFountainOfDreams) {
+            for (const event of entry?.stageEvents ?? []) {
+                if (!("platform" in event) || event.platform === undefined || event.height === undefined) {
+                    continue;
+                }
+                hasFodEvents = true;
+                if (event.platform === FodPlatformSide.LEFT) {
+                    fodLeftHeight = event.height;
+                } else {
+                    fodRightHeight = event.height;
+                }
+            }
+            fodPlatformHeights.left.push(fodLeftHeight);
+            fodPlatformHeights.right.push(fodRightHeight);
+        }
         if (!entry) {
             // Missing frame (e.g. a truncated replay): repeat the last known state so
             // frame numbers stay aligned with array indices.
@@ -156,7 +185,6 @@ export function parseReplay(filePath: string): ReplayData {
         previous = snapshot;
     }
 
-    const stageId = settings.stageId ?? 0;
     return {
         filePath,
         fileName: basename(filePath),
@@ -167,6 +195,7 @@ export function parseReplay(filePath: string): ReplayData {
         lastFrame,
         players,
         internalCharacterIds: [...internalCharacterIds],
+        fodPlatformHeights: isFountainOfDreams && hasFodEvents ? fodPlatformHeights : null,
         frames: snapshots,
     };
 }

@@ -5,17 +5,14 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { parseReplay } from "./replay";
 import { registerAnimationHandlers } from "./animations";
 import { registerSavestateHandlers } from "./savestate";
+import { registerLibraryHandlers } from "./library";
+import { getDefaultReplayDirectory } from "./paths";
 import type { LoadReplayResult } from "../shared/types";
-
-const DEFAULT_REPLAY_DIR = "D:\\All Slippi Replays";
 
 let lastOpenedDirectory: string | null = null;
 
 function getDefaultDirectory(): string {
-    if (lastOpenedDirectory) {
-        return lastOpenedDirectory;
-    }
-    return existsSync(DEFAULT_REPLAY_DIR) ? DEFAULT_REPLAY_DIR : app.getPath("documents");
+    return lastOpenedDirectory ?? getDefaultReplayDirectory();
 }
 
 function createWindow(): void {
@@ -31,6 +28,13 @@ function createWindow(): void {
             preload: join(__dirname, "../preload/index.js"),
             sandbox: false,
         },
+    });
+
+    // localStorage (UI preferences such as camera mode and the replay browser) is written
+    // to disk lazily; without an explicit flush, changes made shortly before quitting
+    // are lost.
+    mainWindow.on("close", () => {
+        mainWindow.webContents.session.flushStorageData();
     });
 
     mainWindow.on("ready-to-show", () => {
@@ -51,6 +55,7 @@ function createWindow(): void {
 
 registerAnimationHandlers();
 registerSavestateHandlers();
+registerLibraryHandlers();
 
 // A replay passed on the command line, e.g. `slp-viewer path/to/game.slp` or "Open with".
 ipcMain.handle("replay:initial-path", (): string | null => {

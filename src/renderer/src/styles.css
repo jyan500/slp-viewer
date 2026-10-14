@@ -89,10 +89,197 @@ button:disabled {
     color: var(--text-muted);
 }
 
-.app-main {
+.app-body {
+    position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
+}
+
+.app-main {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+}
+
+.menu-button.active {
+    background: var(--surface-raised);
+    border-color: var(--border);
+}
+
+/* Replay browser side panel */
+/* Slides over the viewer (it doesn't take space from it). When closed it's moved off to
+   the left and hidden after the slide, which also takes it out of the tab order. */
+.replay-browser {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    max-width: calc(100% - 48px);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.45);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+        transform 0.2s ease,
+        visibility 0s linear 0.2s;
+}
+
+.replay-browser.open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .replay-browser,
+    .replay-browser.open {
+        transition: none;
+    }
+}
+
+.browser-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 8px 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.browser-root {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.browser-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px;
+    padding: 0 6px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.browser-search:focus-within {
+    border-color: var(--accent);
+}
+
+.browser-search-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.browser-search input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font: inherit;
+    padding: 6px 0;
+    user-select: text;
+}
+
+.browser-tree {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 8px;
+}
+
+.tree-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 8px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+}
+
+.tree-row:hover:not(:disabled) {
+    background: var(--surface-raised);
+}
+
+.tree-row.active,
+.tree-row.active:hover {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+}
+
+.tree-row.active .tree-icon,
+.tree-row.active .tree-subtitle {
+    color: #000;
+}
+
+.folder-row.has-active:not(.expanded) .tree-name {
+    color: var(--accent);
+}
+
+.tree-chevron,
+.tree-icon {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.tree-label {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tree-name,
+.tree-subtitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.tree-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.browser-resize-handle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2;
+}
+
+.browser-resize-handle:hover {
+    background: var(--accent);
+    opacity: 0.5;
 }
 
 .empty-state {
@@ -113,12 +300,18 @@ button:disabled {
 }
 
 .stage-canvas {
+    position: relative;
     flex: 1;
     min-height: 0;
     overflow: hidden;
 }
 
+/* Out of flow, so the canvas's explicit pixel size can't hold its container open when
+   the window or side panel shrinks the available space. */
 .stage-canvas canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
 }
 
