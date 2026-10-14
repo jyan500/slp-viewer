@@ -36,6 +36,29 @@ export interface CharacterState {
     startLCancelStatus: number;
 }
 
+// Pokemon Stadium transformation event (slippi-js StadiumTransformationType). `event`:
+// 2 initiate, 3 on monitor, 4 old form receding, 5 new form rising, 6 finished.
+// `transformation`: 3 fire, 4 grass, 5 normal, 6 rock, 9 water.
+export interface StadiumEvent {
+    frame: number;
+    event: number;
+    transformation: number;
+}
+
+// Collision lines extracted from the user's ISO (scripts/extract-stadium.mjs).
+export interface StadiumCollisionLine {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    kind: "floor" | "ceiling" | "wall";
+}
+
+export interface StadiumCollision {
+    source: string;
+    groups: Record<"base" | "normal" | "fire" | "grass" | "rock" | "water", StadiumCollisionLine[]>;
+}
+
 // A projectile or item on a frame (slippi-js ItemUpdateType).
 export interface ItemState {
     // Index into Slippi Lab's itemNamesById, e.g. 55 = Falco's Laser.
@@ -78,6 +101,8 @@ export interface ReplayData {
     // the game's raw units. Null for other stages, or replays older than 3.18 that don't
     // record platform movement.
     fodPlatformHeights: { left: number[]; right: number[] } | null;
+    // Pokemon Stadium transformation events in frame order; null for other stages.
+    stadiumEvents: StadiumEvent[] | null;
     frames: FrameSnapshot[];
 }
 

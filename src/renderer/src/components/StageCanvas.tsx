@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FrameSnapshot, ReplayData } from "../../../shared/types";
+import type { FrameSnapshot, ReplayData, StadiumCollision } from "../../../shared/types";
 import type { AnimationsByZip } from "../hooks/useCharacterAnimations";
+import { useStadiumCollision } from "../hooks/useStadiumCollision";
+import { getStadiumLabel, getStadiumState, getStadiumTerrain, type TerrainLine } from "../lib/stadium";
 import { getStageGeometry, getViewBounds, type Bounds, type StageGeometry } from "../lib/stages";
 import { getPortColor } from "../lib/format";
 import { createViewport, type Viewport } from "../lib/viewport";
@@ -13,6 +15,23 @@ const STAGE_STROKE = "#9aa3b5";
 // Randall is lighter so it reads as separate from the stage.
 const CLOUD_STROKE = "#d6dbe6";
 
+// Terrain that is sinking or rising is drawn faded: the vertical scaling is an estimate.
+const MOVING_TERRAIN_ALPHA = 0.55;
+
+function drawTerrainLines(context: CanvasRenderingContext2D, viewport: Viewport, lines: TerrainLine[]) {
+    context.strokeStyle = STAGE_STROKE;
+    context.lineCap = "round";
+    for (const line of lines) {
+        context.globalAlpha = line.isMoving ? MOVING_TERRAIN_ALPHA : 1;
+        context.lineWidth = line.kind === "floor" ? 3 : 1.5;
+        context.beginPath();
+        context.moveTo(viewport.toScreenX(line.x1), viewport.toScreenY(line.y1));
+        context.lineTo(viewport.toScreenX(line.x2), viewport.toScreenY(line.y2));
+        context.stroke();
+    }
+    context.globalAlpha = 1;
+}
+
 function drawStage(
     context: CanvasRenderingContext2D,
     viewport: Viewport,
@@ -20,8 +39,15 @@ function drawStage(
     bounds: Bounds,
     replay: ReplayData,
     frame: number,
+    stadiumCollision: StadiumCollision | null,
 ) {
     const { toScreenX, toScreenY } = viewport;
+    // Pokemon Stadium with extracted geometry: the middle of the stage comes from the
+    // active transformation's collision lines instead of the fixed outline's flat top.
+    const terrain =
+        replay.stadiumEvents && stadiumCollision
+            ? getStadiumTerrain(getStadiumState(frame, replay.stadiumEvents), stadiumCollision)
+            : null;
 
     context.save();
     context.setLineDash([6, 6]);
@@ -53,25 +79,59 @@ function drawStage(
     }
     context.setLineDash([]);
 
-    context.beginPath();
-    geometry.outline.forEach(([x, y], index) => {
-        if (index === 0) {
-            context.moveTo(toScreenX(x), toScreenY(y));
-        } else {
-            context.lineTo(toScreenX(x), toScreenY(y));
+    const traceOutline = (isClosed: boolean) => {
+        context.beginPath();
+        geometry.outline.forEach(([x, y], index) => {
+            if (index === 0) {
+                context.moveTo(toScreenX(x), toScreenY(y));
+            } else {
+                context.lineTo(toScreenX(x), toScreenY(y));
+            }
+        });
+        if (isClosed) {
+            context.closePath();
         }
-    });
-    context.closePath();
+    };
+    traceOutline(true);
     context.fillStyle = STAGE_FILL;
     context.fill();
+    // With terrain, leave the closing segment (Stadium's flat top edge) unstroked: the
+    // terrain lines draw the real floor there.
+    traceOutline(!terrain);
     context.strokeStyle = STAGE_STROKE;
     context.lineWidth = 2;
     context.stroke();
 
+    if (terrain) {
+        drawTerrainLines(context, viewport, terrain);
+        return;
+    }
     context.lineWidth = 3;
     for (const platform of geometry.platforms) {
         drawLine(platform.left, platform.right, platform.height);
     }
+}
+
+// Pokemon Stadium: name the current transformation and phase in the corner.
+function drawStadiumLabel(context: CanvasRenderingContext2D, replay: ReplayData, frame: number) {
+    if (!replay.stadiumEvents) {
+        return;
+    }
+    const label = getStadiumLabel(getStadiumState(frame, replay.stadiumEvents));
+    if (!label) {
+        return;
+    }
+    context.font = "600 12px system-ui, sans-serif";
+    const paddingX = 8;
+    const width = context.measureText(label).width + paddingX * 2;
+    context.fillStyle = "rgba(15, 17, 21, 0.75)";
+    context.beginPath();
+    context.roundRect(12, 12, width, 22, 6);
+    context.fill();
+    context.fillStyle = "#e6e8ee";
+    context.textAlign = "left";
+    context.textBaseline = "middle";
+    context.fillText(label, 12 + paddingX, 23);
 }
 
 function drawFrame(
@@ -83,13 +143,16 @@ function drawFrame(
     view: CameraView,
     frameIndex: number,
     animationsByZip: AnimationsByZip,
+    stadiumCollision: StadiumCollision | null,
 ) {
     context.clearRect(0, 0, width, height);
     const viewport = createViewport(view, width, height);
     const geometry = getStageGeometry(replay.stageId);
+    const frame = replay.firstFrame + frameIndex;
     if (geometry) {
-        drawStage(context, viewport, geometry, bounds, replay, replay.firstFrame + frameIndex);
+        drawStage(context, viewport, geometry, bounds, replay, frame, stadiumCollision);
     }
+    drawStadiumLabel(context, replay, frame);
     const snapshot = replay.frames[frameIndex];
     if (!snapshot) {
         return;
@@ -144,6 +207,7 @@ export function StageCanvas({ replay, frame, animationsByZip, cameraMode }: Stag
     const [size, setSize] = useState({ width: 0, height: 0 });
     const bounds = useMemo(() => getViewBounds(replay), [replay]);
     const cameraTrack = useMemo(() => computeCameraTrack(replay), [replay]);
+    const stadiumCollision = useStadiumCollision(replay.stageId);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -179,8 +243,9 @@ export function StageCanvas({ replay, frame, animationsByZip, cameraMode }: Stag
             view,
             frameIndex,
             animationsByZip,
+            stadiumCollision,
         );
-    }, [replay, bounds, cameraTrack, cameraMode, frame, size, animationsByZip]);
+    }, [replay, bounds, cameraTrack, cameraMode, frame, size, animationsByZip, stadiumCollision]);
 
     return (
         <div ref={containerRef} className="stage-canvas">

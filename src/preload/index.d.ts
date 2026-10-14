@@ -6,6 +6,7 @@ import type {
     SavestateExportRequest,
     SavestateExportResult,
     SavestateSettings,
+    StadiumCollision,
 } from "../shared/types";
 
 declare global {
@@ -20,6 +21,7 @@ declare global {
             saveSavestateSettings: (settings: SavestateSettings) => Promise<void>;
             chooseExportFolder: (currentFolder: string | null) => Promise<string | null>;
             exportSavestate: (request: SavestateExportRequest) => Promise<SavestateExportResult>;
+            loadStadiumCollision: () => Promise<StadiumCollision | null>;
             getDefaultLibraryFolder: () => Promise<string>;
             listDirectory: (directoryPath: string) => Promise<DirectoryListing>;
             searchLibrary: (rootPath: string, query: string) => Promise<LibrarySearchResponse>;

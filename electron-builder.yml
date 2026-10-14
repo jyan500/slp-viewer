@@ -16,6 +16,11 @@ extraResources:
     to: animations
     filter:
       - "*.zip"
+  # Pokemon Stadium transformation geometry from `npm run extract-stadium` (optional).
+  - from: resources/stadium
+    to: stadium
+    filter:
+      - "*.json"
   - from: improover
     to: improover
     filter:

@@ -21,6 +21,16 @@ Character animation data and rendering logic are adapted from Slippi Lab
   `resources/animations/`, which is not committed to this repository. The animation data
   in those zips is derived from Super Smash Bros. Melee.
 
+## Pokémon Stadium transformations
+
+`scripts/extract-stadium.mjs` reads the transformation collision lines from the user's own
+Melee ISO (`GrPs.dat`) into `resources/stadium/` (not committed). Which collision groups
+belong to which form follows the layout documented in
+[ericvanlare/melee-web's POKEMON_STADIUM_PORT_NOTES.md](https://github.com/ericvanlare/melee-web/pull/161);
+no code or data from that repository is included.
+
+## Slippi Lab license
+
 ```
 MIT License
 

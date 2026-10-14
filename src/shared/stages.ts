@@ -1,6 +1,7 @@
 // Stage facts needed by both the parser (main) and the renderer.
 
 export const FOUNTAIN_OF_DREAMS_STAGE_ID = 2;
+export const POKEMON_STADIUM_STAGE_ID = 3;
 
 // Fountain of Dreams side platforms at match start, in the game's raw height units
 // (the renderer scales these to world units). From Slippi Lab's constants.ts.

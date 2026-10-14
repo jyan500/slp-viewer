@@ -6,6 +6,7 @@ import { parseReplay } from "./replay";
 import { registerAnimationHandlers } from "./animations";
 import { registerSavestateHandlers } from "./savestate";
 import { registerLibraryHandlers } from "./library";
+import { registerStadiumHandlers } from "./stadium";
 import { getDefaultReplayDirectory } from "./paths";
 import type { LoadReplayResult } from "../shared/types";
 
@@ -56,6 +57,7 @@ function createWindow(): void {
 registerAnimationHandlers();
 registerSavestateHandlers();
 registerLibraryHandlers();
+registerStadiumHandlers();
 
 // A replay passed on the command line, e.g. `slp-viewer path/to/game.slp` or "Open with".
 ipcMain.handle("replay:initial-path", (): string | null => {

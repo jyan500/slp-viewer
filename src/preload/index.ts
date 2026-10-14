@@ -7,6 +7,7 @@ import type {
     SavestateExportRequest,
     SavestateExportResult,
     SavestateSettings,
+    StadiumCollision,
 } from "../shared/types";
 
 contextBridge.exposeInMainWorld("api", {
@@ -24,6 +25,7 @@ contextBridge.exposeInMainWorld("api", {
         ipcRenderer.invoke("savestate:choose-folder", currentFolder),
     exportSavestate: (request: SavestateExportRequest): Promise<SavestateExportResult> =>
         ipcRenderer.invoke("savestate:export", request),
+    loadStadiumCollision: (): Promise<StadiumCollision | null> => ipcRenderer.invoke("stadium:load"),
     getDefaultLibraryFolder: (): Promise<string> => ipcRenderer.invoke("library:default-folder"),
     listDirectory: (directoryPath: string): Promise<DirectoryListing> =>
         ipcRenderer.invoke("library:list", directoryPath),

@@ -1,11 +1,12 @@
 import { basename } from "path";
 import { FodPlatformSide, Frames, SlippiGame, characters, stages } from "@slippi/slippi-js/node";
 import type { ItemUpdateType, PostFrameUpdateType, PreFrameUpdateType } from "@slippi/slippi-js/node";
-import type { CharacterState, FrameSnapshot, ItemState, PlayerInfo, ReplayData } from "../shared/types";
+import type { CharacterState, FrameSnapshot, ItemState, PlayerInfo, ReplayData, StadiumEvent } from "../shared/types";
 import {
     FOD_INITIAL_LEFT_PLATFORM_HEIGHT,
     FOD_INITIAL_RIGHT_PLATFORM_HEIGHT,
     FOUNTAIN_OF_DREAMS_STAGE_ID,
+    POKEMON_STADIUM_STAGE_ID,
 } from "../shared/stages";
 
 const MAX_PLAYERS = 4;
@@ -129,6 +130,8 @@ export function parseReplay(filePath: string): ReplayData {
     let fodLeftHeight = FOD_INITIAL_LEFT_PLATFORM_HEIGHT;
     let fodRightHeight = FOD_INITIAL_RIGHT_PLATFORM_HEIGHT;
     let hasFodEvents = false;
+    const isPokemonStadium = stageId === POKEMON_STADIUM_STAGE_ID;
+    const stadiumEvents: StadiumEvent[] = [];
 
     const snapshots: FrameSnapshot[] = [];
     const internalCharacterIds = new Set<number>();
@@ -149,6 +152,13 @@ export function parseReplay(filePath: string): ReplayData {
             }
             fodPlatformHeights.left.push(fodLeftHeight);
             fodPlatformHeights.right.push(fodRightHeight);
+        }
+        if (isPokemonStadium) {
+            for (const event of entry?.stageEvents ?? []) {
+                if ("transformation" in event && event.event !== undefined && event.transformation !== undefined) {
+                    stadiumEvents.push({ frame: frameNumber, event: event.event, transformation: event.transformation });
+                }
+            }
         }
         if (!entry) {
             // Missing frame (e.g. a truncated replay): repeat the last known state so
@@ -196,6 +206,7 @@ export function parseReplay(filePath: string): ReplayData {
         players,
         internalCharacterIds: [...internalCharacterIds],
         fodPlatformHeights: isFountainOfDreams && hasFodEvents ? fodPlatformHeights : null,
+        stadiumEvents: isPokemonStadium ? stadiumEvents : null,
         frames: snapshots,
     };
 }

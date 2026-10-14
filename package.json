@@ -14,7 +14,8 @@
         "typecheck": "npm run typecheck:node && npm run typecheck:web",
         "fetch-animations": "node scripts/fetch-animations.mjs",
         "import-improover": "node scripts/import-improover.mjs",
-        "build:portable": "node scripts/check-build-resources.mjs && npm run build && electron-builder --win portable"
+        "build:portable": "node scripts/check-build-resources.mjs && npm run build && electron-builder --win portable",
+        "extract-stadium": "node scripts/extract-stadium.mjs"
     },
     "dependencies": {
         "@electron-toolkit/preload": "^3.0.2",

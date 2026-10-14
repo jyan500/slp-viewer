@@ -16,6 +16,9 @@ if (zipCount < 26) {
 if (!existsSync(join(root, "improover", "slippi_analyzer.dll"))) {
     problems.push(`improover/slippi_analyzer.dll is missing. Run "npm run import-improover".`);
 }
+if (!existsSync(join(root, "resources", "stadium", "stadium-collision.json"))) {
+    console.warn('Note: Pokemon Stadium transformations not extracted; run "npm run extract-stadium" to include them.');
+}
 if (!existsSync(join(root, "improover", "config.txt"))) {
     console.warn("Note: improover/config.txt is missing; the packaged app will start with default savestate settings.");
 }
