@@ -36,11 +36,30 @@ export interface CharacterState {
     startLCancelStatus: number;
 }
 
+// A projectile or item on a frame (slippi-js ItemUpdateType).
+export interface ItemState {
+    // Index into Slippi Lab's itemNamesById, e.g. 55 = Falco's Laser.
+    typeId: number;
+    state: number;
+    x: number;
+    y: number;
+    velocityX: number;
+    velocityY: number;
+    facing: number;
+    // playerIndex of the character that owns it, or -1 for stage/game items.
+    owner: number;
+    // Samus: 0 = homing, 1 = super missile.
+    missileType: number;
+    // Samus charge shot charge level, 0-7.
+    chargePower: number;
+}
+
 export interface FrameSnapshot {
     // Indexed by playerIndex (0-3); null when that port has no data this frame.
     players: Array<CharacterState | null>;
     // Ice Climbers' Nana, indexed the same way.
     followers: Array<CharacterState | null>;
+    items: ItemState[];
 }
 
 export interface ReplayData {

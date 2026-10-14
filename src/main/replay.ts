@@ -1,7 +1,7 @@
 import { basename } from "path";
 import { Frames, SlippiGame, characters, stages } from "@slippi/slippi-js/node";
-import type { PostFrameUpdateType, PreFrameUpdateType } from "@slippi/slippi-js/node";
-import type { CharacterState, FrameSnapshot, PlayerInfo, ReplayData } from "../shared/types";
+import type { ItemUpdateType, PostFrameUpdateType, PreFrameUpdateType } from "@slippi/slippi-js/node";
+import type { CharacterState, FrameSnapshot, ItemState, PlayerInfo, ReplayData } from "../shared/types";
 
 const MAX_PLAYERS = 4;
 
@@ -59,6 +59,24 @@ function toCharacterState(
     };
 }
 
+function toItemState(item: ItemUpdateType): ItemState | null {
+    if (item.typeId == null || item.positionX == null || item.positionY == null) {
+        return null;
+    }
+    return {
+        typeId: item.typeId,
+        state: item.state ?? 0,
+        x: item.positionX,
+        y: item.positionY,
+        velocityX: item.velocityX ?? 0,
+        velocityY: item.velocityY ?? 0,
+        facing: item.facingDirection ?? 1,
+        owner: item.owner ?? -1,
+        missileType: item.missileType ?? 0,
+        chargePower: item.chargePower ?? 0,
+    };
+}
+
 function safeName(lookup: () => string, fallback: string): string {
     try {
         return lookup();
@@ -100,7 +118,7 @@ export function parseReplay(filePath: string): ReplayData {
 
     const snapshots: FrameSnapshot[] = [];
     const internalCharacterIds = new Set<number>();
-    let previous: FrameSnapshot = { players: [], followers: [] };
+    let previous: FrameSnapshot = { players: [], followers: [], items: [] };
     for (let frameNumber = firstFrame; frameNumber <= lastFrame; frameNumber++) {
         const entry = frames[frameNumber];
         if (!entry) {
@@ -109,7 +127,13 @@ export function parseReplay(filePath: string): ReplayData {
             snapshots.push(previous);
             continue;
         }
-        const snapshot: FrameSnapshot = { players: [], followers: [] };
+        const snapshot: FrameSnapshot = { players: [], followers: [], items: [] };
+        for (const item of entry.items ?? []) {
+            const itemState = toItemState(item);
+            if (itemState) {
+                snapshot.items.push(itemState);
+            }
+        }
         for (let playerIndex = 0; playerIndex < MAX_PLAYERS; playerIndex++) {
             // slippi-js omits `followers` on frames with no Ice Climbers follower.
             const player = toCharacterState(

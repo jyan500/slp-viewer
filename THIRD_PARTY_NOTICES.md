@@ -11,6 +11,8 @@ Character animation data and rendering logic are adapted from Slippi Lab
   its animation selection, transform, shield and shine logic.
 - `src/renderer/src/lib/camera.ts` adapts its follow camera (padding, minimum size and
   easing constants).
+- `src/renderer/src/lib/itemNames.ts` is vendored from that commit, and
+  `src/renderer/src/lib/drawItems.ts` ports its projectile shapes and hitbox sizes.
 - `scripts/fetch-animations.mjs` downloads its pre-extracted animation zips into
   `resources/animations/`, which is not committed to this repository. The animation data
   in those zips is derived from Super Smash Bros. Melee.

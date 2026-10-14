@@ -6,6 +6,7 @@ import { getPortColor } from "../lib/format";
 import { createViewport, type Viewport } from "../lib/viewport";
 import { boundsToView, computeCameraTrack, type CameraMode, type CameraView } from "../lib/camera";
 import { drawCharacter, drawLabels, type CharacterLabel } from "../lib/drawCharacter";
+import { drawItems } from "../lib/drawItems";
 
 const STAGE_DEPTH = 30;
 
@@ -100,6 +101,7 @@ function drawFrame(
             }
         }
     }
+    drawItems(context, viewport, snapshot);
     drawLabels(context, labels);
 }
 
