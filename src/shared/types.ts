@@ -70,6 +70,8 @@ export interface SavestateEnvironment extends SavestateSettings {
     dllFound: boolean;
     dllPath: string;
     configPath: string;
+    // How to fix a missing DLL; differs between dev and packaged builds.
+    missingDllMessage: string | null;
 }
 
 export interface SavestateExportRequest {

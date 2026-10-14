@@ -1,8 +1,10 @@
 // Savestate export through Melee-Improover's slippi_analyzer.dll. The DLL and a copy of
-// Melee-Improover's config.txt live in <project>/improover/ (see scripts/import-improover.mjs).
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
-import { basename, extname, join } from "path";
+// Melee-Improover's config.txt live in an improover/ folder (see paths.ts for where that
+// is in dev vs. packaged builds, and scripts/import-improover.mjs for how it's filled).
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { basename, dirname, extname, join } from "path";
 import { app, dialog, ipcMain, utilityProcess } from "electron";
+import { getBundledImprooverDirectory, getImprooverDirectory, seedImprooverFile } from "./paths";
 import type {
     SavestateEnvironment,
     SavestateExportRequest,
@@ -25,16 +27,26 @@ const CONFIG_LINE_CLIP_LENGTH = 4;
 const DEFAULT_CONFIG_LINES = ["NONE", "NONE", "0", "0", String(DEFAULT_CLIP_LENGTH)];
 const UNSET_PATH = "NONE";
 
-function getImprooverDirectory(): string {
-    return join(app.getAppPath(), "improover");
-}
+const DLL_FILE_NAME = "slippi_analyzer.dll";
+const CONFIG_FILE_NAME = "config.txt";
 
+// A DLL in the writable improover folder wins over the bundled one, so a packaged build
+// can pick up a rebuilt DLL dropped beside the .exe without repackaging.
 function getDllPath(): string {
-    return join(getImprooverDirectory(), "slippi_analyzer.dll");
+    const override = join(getImprooverDirectory(), DLL_FILE_NAME);
+    return existsSync(override) ? override : join(getBundledImprooverDirectory(), DLL_FILE_NAME);
 }
 
+function getMissingDllMessage(): string {
+    return app.isPackaged
+        ? `slippi_analyzer.dll not found. Place it in ${getImprooverDirectory()}.`
+        : `slippi_analyzer.dll not found at ${getDllPath()}. Run "npm run import-improover" to copy it from Melee-Improover.`;
+}
+
+// Seeded from the bundled copy on first use in a packaged build, so the user's settings
+// are kept somewhere writable.
 function getConfigPath(): string {
-    return join(getImprooverDirectory(), "config.txt");
+    return seedImprooverFile(CONFIG_FILE_NAME);
 }
 
 interface ConfigFile {
@@ -81,15 +93,20 @@ function writeSettings(settings: SavestateSettings): void {
     config.lines[CONFIG_LINE_NAMING_STYLE] = String(settings.namingStyle);
     config.lines[CONFIG_LINE_CLIP_LENGTH] = String(settings.clipLength);
     const text = config.lines.join(config.lineEnding) + (config.hasTrailingNewline ? config.lineEnding : "");
-    writeFileSync(getConfigPath(), text, "utf8");
+    const configPath = getConfigPath();
+    mkdirSync(dirname(configPath), { recursive: true });
+    writeFileSync(configPath, text, "utf8");
 }
 
 function getEnvironment(): SavestateEnvironment {
+    const dllPath = getDllPath();
+    const dllFound = existsSync(dllPath);
     return {
         ...readSettings(),
-        dllFound: existsSync(getDllPath()),
-        dllPath: getDllPath(),
+        dllFound,
+        dllPath,
         configPath: getConfigPath(),
+        missingDllMessage: dllFound ? null : getMissingDllMessage(),
     };
 }
 
@@ -190,10 +207,7 @@ function findNewestSavestate(folder: string, sinceMs: number): string | null {
 async function exportSavestate(request: SavestateExportRequest): Promise<SavestateExportResult> {
     const dllPath = getDllPath();
     if (!existsSync(dllPath)) {
-        return {
-            ok: false,
-            error: `slippi_analyzer.dll not found at ${dllPath}. Run "npm run import-improover" to copy it from Melee-Improover.`,
-        };
+        return { ok: false, error: getMissingDllMessage() };
     }
     if (!request.exportFolder || !existsSync(request.exportFolder) || !statSync(request.exportFolder).isDirectory()) {
         return { ok: false, error: `Export folder not found: ${request.exportFolder || "(not set)"}` };

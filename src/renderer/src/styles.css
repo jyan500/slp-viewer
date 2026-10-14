@@ -467,3 +467,15 @@ button.primary:hover:not(:disabled) {
 .notice code {
     font-family: ui-monospace, Consolas, monospace;
 }
+
+.path-hint {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.path-hint span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -251,18 +251,16 @@ export function SavestateDialog({ replay, initialFrame, onClose }: SavestateDial
                         </div>
                     </div>
 
-                    {environment && !environment.dllFound && (
+                    {environment?.missingDllMessage && (
                         <div className="notice warning">
                             <TriangleAlert size={16} />
-                            <span>
-                                slippi_analyzer.dll not found in improover/. Run <code>npm run import-improover</code> to
-                                copy it from Melee-Improover.
-                            </span>
+                            <span>{environment.missingDllMessage}</span>
                         </div>
                     )}
                     {environment && (
-                        <div className="field-hint" title={`${environment.configPath}\n${environment.dllPath}`}>
-                            Settings: improover/config.txt · Exporter: improover/slippi_analyzer.dll
+                        <div className="field-hint path-hint">
+                            <span title={environment.configPath}>Settings: {environment.configPath}</span>
+                            <span title={environment.dllPath}>Exporter: {environment.dllPath}</span>
                         </div>
                     )}
                 </div>

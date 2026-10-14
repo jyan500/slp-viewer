@@ -1,0 +1,39 @@
+# Portable Windows build: `npm run build:portable` -> dist/SLP-Viewer-<version>-portable.exe
+appId: com.jyan500.slp-viewer
+productName: SLP Viewer
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - out/**
+  - package.json
+
+# Loaded from process.resourcesPath at runtime (see src/main/paths.ts). They can't live
+# inside app.asar: Windows can't load a DLL from the archive, and the zips are ~90 MB.
+extraResources:
+  - from: resources/animations
+    to: animations
+    filter:
+      - "*.zip"
+  - from: improover
+    to: improover
+    filter:
+      - slippi_analyzer.dll
+      - config.txt
+
+# koffi's native binary must be a real file on disk to be loaded.
+asarUnpack:
+  - node_modules/@koromix/**
+  - node_modules/koffi/**
+
+# koffi ships a prebuilt N-API binary that works in Electron as-is; skip rebuilding.
+npmRebuild: false
+
+win:
+  target:
+    - target: portable
+      arch: x64
+
+portable:
+  artifactName: SLP-Viewer-${version}-portable.${ext}

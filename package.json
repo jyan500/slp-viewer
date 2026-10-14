@@ -13,7 +13,8 @@
         "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
         "typecheck": "npm run typecheck:node && npm run typecheck:web",
         "fetch-animations": "node scripts/fetch-animations.mjs",
-        "import-improover": "node scripts/import-improover.mjs"
+        "import-improover": "node scripts/import-improover.mjs",
+        "build:portable": "node scripts/check-build-resources.mjs && npm run build && electron-builder --win portable"
     },
     "dependencies": {
         "@electron-toolkit/preload": "^3.0.2",
@@ -29,6 +30,7 @@
         "@types/react-dom": "^18.3.7",
         "@vitejs/plugin-react": "^4.7.0",
         "electron": "^33.4.11",
+        "electron-builder": "^26.15.3",
         "electron-vite": "^2.3.0",
         "lucide-react": "^1.56.0",
         "react": "^18.3.1",

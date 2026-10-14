@@ -1,11 +1,12 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { app, ipcMain } from "electron";
+import { ipcMain } from "electron";
+import { getBundledPath } from "./paths";
 
 const ZIP_NAME_PATTERN = /^[A-Za-z]+$/;
 
 function getAnimationsDirectory(): string {
-    return join(app.getAppPath(), "resources", "animations");
+    return getBundledPath(join("resources", "animations"), "animations");
 }
 
 // Serves the raw (still compressed) zip; the renderer unzips it. Sending compressed
