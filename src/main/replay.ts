@@ -1,6 +1,12 @@
 import { basename } from "path";
 import { FodPlatformSide, Frames, SlippiGame, characters, stages } from "@slippi/slippi-js/node";
-import type { ItemUpdateType, PostFrameUpdateType, PreFrameUpdateType } from "@slippi/slippi-js/node";
+import type {
+    ItemUpdateType,
+    MetadataType,
+    PlayerType,
+    PostFrameUpdateType,
+    PreFrameUpdateType,
+} from "@slippi/slippi-js/node";
 import type { CharacterState, FrameSnapshot, ItemState, PlayerInfo, ReplayData, StadiumEvent } from "../shared/types";
 import {
     FOD_INITIAL_LEFT_PLATFORM_HEIGHT,
@@ -83,12 +89,25 @@ function toItemState(item: ItemUpdateType): ItemState | null {
     };
 }
 
-function safeName(lookup: () => string, fallback: string): string {
+export function safeName(lookup: () => string, fallback: string): string {
     try {
         return lookup();
     } catch {
         return fallback;
     }
+}
+
+// Older replays only have names in the metadata block; offline games fall back to the
+// in-game nametag.
+export function getPlayerIdentity(
+    player: PlayerType,
+    metadata: MetadataType | undefined,
+): { displayName: string; connectCode: string } {
+    const metadataNames = metadata?.players?.[player.playerIndex]?.names;
+    return {
+        displayName: player.displayName || metadataNames?.netplay || player.nametag || "",
+        connectCode: player.connectCode || metadataNames?.code || "",
+    };
 }
 
 export function parseReplay(filePath: string): ReplayData {
@@ -110,14 +129,12 @@ export function parseReplay(filePath: string): ReplayData {
 
     const players: PlayerInfo[] = settings.players.map((player) => {
         const characterId = player.characterId ?? 0;
-        const metadataNames = metadata?.players?.[player.playerIndex]?.names;
         return {
             playerIndex: player.playerIndex,
             port: player.port,
             characterId,
             characterName: safeName(() => characters.getCharacterShortName(characterId), "Unknown"),
-            displayName: player.displayName || metadataNames?.netplay || player.nametag || "",
-            connectCode: player.connectCode || metadataNames?.code || "",
+            ...getPlayerIdentity(player, metadata),
             teamId: settings.isTeams ? (player.teamId ?? null) : null,
         };
     });

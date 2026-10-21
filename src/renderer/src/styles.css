@@ -154,10 +154,27 @@ button:disabled {
 .browser-root {
     flex: 1;
     min-width: 0;
+    padding: 2px 6px;
+    margin-left: -6px;
+    border: none;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* The folder the player search runs in. */
+.browser-root.selected,
+.folder-row.selected {
+    border-left: 2px solid var(--accent);
+}
+
+.folder-row {
+    border-left: 2px solid transparent;
 }
 
 .browser-search {
@@ -255,6 +272,11 @@ button:disabled {
 
 .tree-subtitle {
     font-size: 11px;
+    color: var(--text-muted);
+}
+
+.load-more-row {
+    font-size: 12px;
     color: var(--text-muted);
 }
 

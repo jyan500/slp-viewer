@@ -147,23 +147,42 @@ export interface LibraryEntry {
     path: string;
 }
 
+export interface ReplaySummaryPlayer {
+    port: number;
+    displayName: string;
+    connectCode: string;
+    characterName: string;
+    teamId: number | null;
+}
+
+// Header info shown in the replay browser, read without parsing frames.
+export interface ReplaySummary {
+    players: ReplaySummaryPlayer[];
+    stageName: string;
+    // ISO timestamp; missing on some older or unfinished replays.
+    startAt: string | null;
+    durationSeconds: number | null;
+}
+
+export interface LibraryFileEntry extends LibraryEntry {
+    // Null when the replay couldn't be read; the browser shows the file name instead.
+    summary: ReplaySummary | null;
+}
+
 export interface DirectoryListing {
+    // Every subfolder, regardless of the requested page.
     folders: LibraryEntry[];
-    // Only .slp files.
-    files: LibraryEntry[];
+    // One page of .slp files.
+    files: LibraryFileEntry[];
+    totalFiles: number;
     error?: string;
 }
 
-export interface LibrarySearchResult extends LibraryEntry {
-    kind: "folder" | "file";
-    // Parent folder relative to the search root, for display ("" = the root itself).
-    parentPath: string;
-}
-
-export interface LibrarySearchResponse {
-    results: LibrarySearchResult[];
-    // True when the result limit was hit and the search stopped early.
-    isTruncated: boolean;
+export interface FolderSearchResponse {
+    // One page of matches.
+    files: LibraryFileEntry[];
+    totalMatches: number;
+    error?: string;
 }
 
 export type LoadReplayResult =

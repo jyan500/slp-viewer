@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import type {
     DirectoryListing,
-    LibrarySearchResponse,
+    FolderSearchResponse,
     LoadReplayResult,
     SavestateEnvironment,
     SavestateExportRequest,
@@ -27,10 +27,10 @@ contextBridge.exposeInMainWorld("api", {
         ipcRenderer.invoke("savestate:export", request),
     loadStadiumCollision: (): Promise<StadiumCollision | null> => ipcRenderer.invoke("stadium:load"),
     getDefaultLibraryFolder: (): Promise<string> => ipcRenderer.invoke("library:default-folder"),
-    listDirectory: (directoryPath: string): Promise<DirectoryListing> =>
-        ipcRenderer.invoke("library:list", directoryPath),
-    searchLibrary: (rootPath: string, query: string): Promise<LibrarySearchResponse> =>
-        ipcRenderer.invoke("library:search", rootPath, query),
+    listDirectory: (directoryPath: string, offset: number, limit: number): Promise<DirectoryListing> =>
+        ipcRenderer.invoke("library:list", directoryPath, offset, limit),
+    searchFolder: (folderPath: string, query: string, offset: number, limit: number): Promise<FolderSearchResponse> =>
+        ipcRenderer.invoke("library:search", folderPath, query, offset, limit),
     chooseLibraryFolder: (currentFolder: string | null): Promise<string | null> =>
         ipcRenderer.invoke("library:choose-folder", currentFolder),
 });

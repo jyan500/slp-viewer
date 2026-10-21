@@ -1,6 +1,6 @@
 import type {
     DirectoryListing,
-    LibrarySearchResponse,
+    FolderSearchResponse,
     LoadReplayResult,
     SavestateEnvironment,
     SavestateExportRequest,
@@ -23,8 +23,8 @@ declare global {
             exportSavestate: (request: SavestateExportRequest) => Promise<SavestateExportResult>;
             loadStadiumCollision: () => Promise<StadiumCollision | null>;
             getDefaultLibraryFolder: () => Promise<string>;
-            listDirectory: (directoryPath: string) => Promise<DirectoryListing>;
-            searchLibrary: (rootPath: string, query: string) => Promise<LibrarySearchResponse>;
+            listDirectory: (directoryPath: string, offset: number, limit: number) => Promise<DirectoryListing>;
+            searchFolder: (folderPath: string, query: string, offset: number, limit: number) => Promise<FolderSearchResponse>;
             chooseLibraryFolder: (currentFolder: string | null) => Promise<string | null>;
         };
     }
