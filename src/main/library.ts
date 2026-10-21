@@ -82,6 +82,33 @@ async function withSummaries(files: LibraryEntry[]): Promise<LibraryFileEntry[]>
     return results;
 }
 
+// Slippi names replays "Game_YYYYMMDDTHHMMSS.slp" (local time, when the game started).
+const REPLAY_TIMESTAMP_PATTERN = /(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/;
+
+// When a replay was played, without opening it: the timestamp in its name, or else its
+// modified time (renamed replays). Unreadable files sort last.
+async function getReplayTime(file: LibraryEntry): Promise<number> {
+    const match = REPLAY_TIMESTAMP_PATTERN.exec(file.name);
+    if (match) {
+        const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+        const time = new Date(year, month - 1, day, hour, minute, second).getTime();
+        if (!Number.isNaN(time)) {
+            return time;
+        }
+    }
+    try {
+        return (await stat(file.path)).mtimeMs;
+    } catch {
+        return -Infinity;
+    }
+}
+
+// Most recent first; ties (e.g. a renamed copy) fall back to the name.
+async function sortByMostRecent(files: LibraryEntry[]): Promise<LibraryEntry[]> {
+    const times = new Map(await Promise.all(files.map(async (file) => [file, await getReplayTime(file)] as const)));
+    return files.sort((first, second) => (times.get(second) as number) - (times.get(first) as number) || byName(first, second));
+}
+
 async function readFolder(directoryPath: string): Promise<{ folders: LibraryEntry[]; files: LibraryEntry[] }> {
     const entries = await readdir(directoryPath, { withFileTypes: true });
     const folders: LibraryEntry[] = [];
@@ -94,7 +121,7 @@ async function readFolder(directoryPath: string): Promise<{ folders: LibraryEntr
             files.push({ name: entry.name, path: entryPath });
         }
     }
-    return { folders: folders.sort(byName), files: files.sort(byName) };
+    return { folders: folders.sort(byName), files: await sortByMostRecent(files) };
 }
 
 function errorMessage(error: unknown): string {
